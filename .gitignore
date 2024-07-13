@@ -1,0 +1,4 @@
+.idea/
+venv/
+*.db
+/very_secret_info.py
