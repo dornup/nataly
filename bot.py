@@ -71,26 +71,13 @@ dp = Dispatcher()
 async def bot_start(message: types.Message):
     await message.answer('Hello')  # обычное сообщение
 
-@dp.message(Command('natal_chard'))
-
-# @dp.message_handler(commands=['test'])
-# async def bot_test(message: types.Message):
-#     await message.reply('test passed')  # ответ
-#
-#
-# @dp.message_handler(commands=['test2'])
-# async def bot_test2(message: types.Message):
-#     await message.reply('second test passed')
-
-
-# @dp.message_handler(commands=['dice'])
-# async def bot_dice(message: types.Message):
-#     await message.answer_dice(emoji='🎲')  # кидаем кубик) да, мне заняться нечем, и что?
-
-
-# @dp.message_handler(commands=['die'])
-# async def bot_die(message: types.Message):
-#     await bot.send_dice(12345678, emoji='🎲')  # будет отправлять кубик на указанный ID
+@dp.message(Command('natal_chart')) # команда для натальной карты
+async def bot_natal_chart(message: types.Message):
+    await message.answer('''
+Расчет вашей натальной карты
+                         
+В этой функции мы рассмотрим, как сошлись звезды во время вашего рождения, и расскажем вам, что значат по астрологии эти соединения небесных тел
+                         ''')
 
 
 async def main():
@@ -99,9 +86,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-
-
-
-# https://geocult.ru/natalnaya-karta-onlayn-raschet?fn=hhh&fd=11&fm=4&fy=1980&fh=12&fmn=0&c1=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F&ttz=20&tz=Europe%2FMoscow&tm=3&lt=55.7522&ln=37.6155&hs=P&sb=1
-# https://geocult.ru/natalnaya-karta-onlayn-raschet?fn=hhh&fd=3&fm=5&fy=1973&fh=12&fmn=0&c1=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F&ttz=20&tz=Europe%2FMoscow&tm=3&lt=55.7522&ln=37.6155&hs=P&sb=1
-# https://geocult.ru/natalnaya-karta-onlayn-raschet?fn=hhh&fd=3&fm=5&fy=1973&fh=12&fmn=0&c1=%D0%91%D0%BB%D0%B0%D0%B3%D0%BE%D0%B2%D0%B5%D1%89%D0%B5%D0%BD%D1%81%D0%BA%2C+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F&ttz=20&tz=Asia%2FYakutsk&tm=9&lt=50.2796&ln=127.540&hs=P&sb=1
