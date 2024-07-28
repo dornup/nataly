@@ -2,3 +2,4 @@
 venv/
 *.db
 /very_secret_info.py
+/req.txt
