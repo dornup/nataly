@@ -3,6 +3,7 @@ import os
 import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router, html
+from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import requests
@@ -16,6 +17,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from lxml.html.soupparser import fromstring
 from calendar import monthrange
+
 
 # настраиваем логирование
 logging.basicConfig(level='INFO')
@@ -122,10 +124,40 @@ async def year(message: types.Message, state: FSMContext):
 
 @form_router.message(Form.year)
 async def month(message: types.Message, state: FSMContext):
-    print('я выжил')
     await state.update_data(year=message.text)
     await state.set_state(Form.month)
     await message.answer('Отлично! введите месяц своего рождения цифрой от 1 до 12')
+
+@form_router.message(Form.month)
+async def day(message: types.Message, state: FSMContext):
+    data = await state.update_data(mont=message.text)
+    d = dict(data)
+    await state.set_state(Form.day)
+    try:
+        await message.answer('Выберите день своего рождения', 
+                            reply_markup=types.ReplyKeyboardMarkup(
+                                keyboard=[[types.KeyboardButton(text=str(i))] for i in range(1, monthrange(int(d['year']), int(message.text))[1] + 1)]
+                            ))
+    except Exception:
+        await message.answer('Вы ввели что-то неверно, вам лучше попробовать еще раз.\nВведите команду /natal_chart чтобы внести данные заново')
+
+@form_router.message(Form.day)
+async def country(message: types.Message, state: FSMContext):
+    await state.update_data(day = message.text)
+    await state.set_state(Form.country)
+    await message.answer('Идем дальше! \nВведите название страны, в которой вы родились')
+
+@form_router.message(Form.country)
+async def state(message: types.Message, state: FSMContext):
+    await state.update_data(country = message.text)
+    await state.set_state(Form.state)
+    await message.answer('Введите область')
+
+@form_router.message(Form.state)
+async def cityplan(message: types.Message, state: FSMContext):
+    await state.update_data(state = message.text)
+    await state.set_state(Form.cityplan)
+    await message.answer('Введите город')   
 
 async def main():
 
