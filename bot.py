@@ -1,5 +1,6 @@
 # разбираемся с aiogram
 import os
+from typing import Dict, Any
 import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router, html
@@ -56,44 +57,6 @@ driver = WebDriver(service=ChromeService())
 #                 driver_path = driver_path.replace('/', '\\')
 #             os.chmod(driver_path, 0o755)
 # driver = webdriver.Chrome(service=ChromeService(driver_path))
-driver.get('https://geocult.ru/natalnaya-karta-onlayn-raschet')
-time.sleep(2)
-name_s = driver.find_element(by = By.CSS_SELECTOR, value = 'input[name="fn"]')
-name_s.send_keys('name')
-day_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fd"]')
-day_s.send_keys('18')
-month_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fm"]')
-month_s.send_keys('Мая') # родительный падеж
-year_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fy"]')
-year_s.send_keys('2009')
-hour_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fh"]')
-hour_s.send_keys('15')
-minute_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fmn"]')
-minute_s.send_keys('27')
-country_s = driver.find_element(value='country')
-country_s.send_keys('Россия')
-time.sleep(1)
-state_s = driver.find_element(value='state')
-state_s.send_keys('Новосибирская область')
-time.sleep(2)
-cityplan_s = driver.find_element(value='cityplan')
-time.sleep(2)
-cityplan_s.send_keys('Новосибирск')
-button = driver.find_element(By.CLASS_NAME, 'natal_button')
-button.click()
-driver.switch_to.window(driver.window_handles[1])
-natal = requests.get(driver.current_url)
-spaces = BeautifulSoup(natal.text, 'html.parser')
-search_space = fromstring(str(spaces))
-link = search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
-img = requests.get(link)
-if img.status_code == 200:
-    with open("natal.jpg", "wb") as file:
-        file.write(img.content)
-        print("Картинка успешно скачана")
-else:
-    print("Не удалось скачать картинку")
-
 
 # обработчик команды start
 @dp.message(Command('start'))  # будет работать только после команды start
@@ -157,7 +120,64 @@ async def state(message: types.Message, state: FSMContext):
 async def cityplan(message: types.Message, state: FSMContext):
     await state.update_data(state = message.text)
     await state.set_state(Form.cityplan)
-    await message.answer('Введите город')   
+    await message.answer('Введите город') 
+
+@form_router.message(Form.cityplan)
+async def city(message: types.Message, state: FSMContext):
+    data = await state.update_data(cityplan = message.text)
+    await state.clear()
+    await message.answer('Начинаем обработку данных...')
+    await send_data(message, data)
+
+
+async def send_data(message: types.Message, data: Dict[str, Any]):
+    name = data['name']
+    year = data['year']
+    month = data['month']
+    day = data['day']
+    hour = data['hour']
+    minute = data['minute']
+    country = data['country']
+    state = data['state']
+    city = data['cityplan']
+    await driver.get('https://geocult.ru/natalnaya-karta-onlayn-raschet')
+    asyncio.sleep(2)
+    name_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'input[name="fn"]')
+    await name_s.send_keys('name')
+    day_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fd"]')
+    await day_s.send_keys('18')
+    month_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fm"]')
+    await month_s.send_keys('Мая') # родительный падеж
+    year_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fy"]')
+    await year_s.send_keys('2009')
+    hour_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fh"]')
+    await hour_s.send_keys('15')
+    minute_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fmn"]')
+    await minute_s.send_keys('27')
+    country_s = await driver.find_element(value='country')
+    await country_s.send_keys('Россия')
+    asyncio.sleep(1)
+    state_s = await driver.find_element(value='state')
+    await state_s.send_keys('Новосибирская область')
+    asyncio.sleep(2)
+    cityplan_s = await driver.find_element(value='cityplan')
+    asyncio.sleep(2)
+    await cityplan_s.send_keys('Новосибирск')
+    button = await driver.find_element(By.CLASS_NAME, 'natal_button')
+    await button.click()
+    await driver.switch_to.window(driver.window_handles[1])
+    natal = await requests.get(driver.current_url)
+    spaces = await BeautifulSoup(natal.text, 'html.parser')
+    search_space = await fromstring(str(spaces))
+    link = await search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
+    img = await requests.get(link)
+    if img.status_code == 200:
+        with await open("natal.jpg", "wb") as file:
+            await file.write(img.content)
+            await print("Картинка успешно скачана")
+    else:
+        await print("Не удалось скачать картинку")
+
 
 async def main():
 
