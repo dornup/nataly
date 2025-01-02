@@ -19,6 +19,20 @@ from selenium.webdriver.common.by import By
 from lxml.html.soupparser import fromstring
 from calendar import monthrange
 
+m = {
+    '1': 'Января',
+    '2': 'Февраля',
+    '3': 'Марта',
+    '4': 'Апреля',
+    '5': 'Мая',
+    '6': 'Июня',
+    '7': 'Июля',
+    '8': 'Августа',
+    '9': 'Сентября',
+    '10': 'Октября',
+    '11': 'Ноября',
+    '12': 'Декабря',
+}
 
 # настраиваем логирование
 logging.basicConfig(level='INFO')
@@ -159,7 +173,7 @@ async def send_data(message: types.Message, data: Dict[str, Any]):
     day_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fd"]')
     day_s.send_keys(day)
     month_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fm"]')
-    month_s.send_keys(month) # родительный падеж TODO: СДЕЛАТЬ ЗАМЕНУ ЦИФРЫ НА МЕСЯЦ В РОДИТЕЛЬНОМ ПАДЕЖЕ
+    month_s.send_keys(m[month]) # родительный падеж TODO: СДЕЛАТЬ ЗАМЕНУ ЦИФРЫ НА МЕСЯЦ В РОДИТЕЛЬНОМ ПАДЕЖЕ
     year_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fy"]')
     year_s.send_keys(year)
     hour_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fh"]')
@@ -181,14 +195,16 @@ async def send_data(message: types.Message, data: Dict[str, Any]):
     natal = requests.get(driver.current_url)
     spaces = BeautifulSoup(natal.text, 'html.parser')
     search_space = fromstring(str(spaces))
-    link = search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
+    # link = search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
+    link = search_space.xpath('//*[@id="r660"]/@href')[0]
+    print(link)
     img = requests.get(link)
     if img.status_code == 200:
-        with await open("natal.jpg", "wb") as file:
-            await file.write(img.content)
-            await print("Картинка успешно скачана")
+        with open("natal.jpg", "wb") as file:
+            file.write(img.content)
+            print("Картинка успешно скачана")
     else:
-        await print("Не удалось скачать картинку")
+        print("Не удалось скачать картинку")
 
 
 async def main():
