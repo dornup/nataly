@@ -14,7 +14,7 @@ from aiogram.filters.command import Command
 import time
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from lxml.html.soupparser import fromstring
 from calendar import monthrange
@@ -93,7 +93,7 @@ async def month(message: types.Message, state: FSMContext):
 
 @form_router.message(Form.month)
 async def day(message: types.Message, state: FSMContext):
-    data = await state.update_data(mont=message.text)
+    data = await state.update_data(month=message.text)
     d = dict(data)
     await state.set_state(Form.day)
     try:
@@ -105,8 +105,20 @@ async def day(message: types.Message, state: FSMContext):
         await message.answer('Вы ввели что-то неверно, вам лучше попробовать еще раз.\nВведите команду /natal_chart чтобы внести данные заново')
 
 @form_router.message(Form.day)
-async def country(message: types.Message, state: FSMContext):
+async def hour(message: types.Message, state: FSMContext):
     await state.update_data(day = message.text)
+    await state.set_state(Form.hour)
+    await message.answer("Хорошо, введите час своего рождения")
+
+@form_router.message(Form.hour)
+async def hour(message: types.Message, state: FSMContext):
+    await state.update_data(hour = message.text)
+    await state.set_state(Form.minute)
+    await message.answer("Продолжим, введите минуту своего рождения")
+
+@form_router.message(Form.minute)
+async def country(message: types.Message, state: FSMContext):
+    await state.update_data(minute = message.text)
     await state.set_state(Form.country)
     await message.answer('Идем дальше! \nВведите название страны, в которой вы родились')
 
@@ -140,37 +152,37 @@ async def send_data(message: types.Message, data: Dict[str, Any]):
     country = data['country']
     state = data['state']
     city = data['cityplan']
-    await driver.get('https://geocult.ru/natalnaya-karta-onlayn-raschet')
-    asyncio.sleep(2)
-    name_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'input[name="fn"]')
-    await name_s.send_keys('name')
-    day_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fd"]')
-    await day_s.send_keys('18')
-    month_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fm"]')
-    await month_s.send_keys('Мая') # родительный падеж
-    year_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fy"]')
-    await year_s.send_keys('2009')
-    hour_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fh"]')
-    await hour_s.send_keys('15')
-    minute_s = await driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fmn"]')
-    await minute_s.send_keys('27')
-    country_s = await driver.find_element(value='country')
-    await country_s.send_keys('Россия')
-    asyncio.sleep(1)
-    state_s = await driver.find_element(value='state')
-    await state_s.send_keys('Новосибирская область')
-    asyncio.sleep(2)
-    cityplan_s = await driver.find_element(value='cityplan')
-    asyncio.sleep(2)
-    await cityplan_s.send_keys('Новосибирск')
-    button = await driver.find_element(By.CLASS_NAME, 'natal_button')
-    await button.click()
-    await driver.switch_to.window(driver.window_handles[1])
-    natal = await requests.get(driver.current_url)
-    spaces = await BeautifulSoup(natal.text, 'html.parser')
-    search_space = await fromstring(str(spaces))
-    link = await search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
-    img = await requests.get(link)
+    driver.get('https://geocult.ru/natalnaya-karta-onlayn-raschet')
+    await asyncio.sleep(2)
+    name_s = driver.find_element(by = By.CSS_SELECTOR, value = 'input[name="fn"]')
+    name_s.send_keys(name)
+    day_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fd"]')
+    day_s.send_keys(day)
+    month_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fm"]')
+    month_s.send_keys(month) # родительный падеж TODO: СДЕЛАТЬ ЗАМЕНУ ЦИФРЫ НА МЕСЯЦ В РОДИТЕЛЬНОМ ПАДЕЖЕ
+    year_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fy"]')
+    year_s.send_keys(year)
+    hour_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fh"]')
+    hour_s.send_keys(hour)
+    minute_s = driver.find_element(by = By.CSS_SELECTOR, value = 'select[name="fmn"]')
+    minute_s.send_keys(minute)
+    country_s = driver.find_element(value='country')
+    country_s.send_keys(country)
+    await asyncio.sleep(1)
+    state_s = driver.find_element(value='state')
+    state_s.send_keys(state)
+    await asyncio.sleep(2)
+    cityplan_s = driver.find_element(value='cityplan')
+    await asyncio.sleep(2)
+    cityplan_s.send_keys(city)
+    button = driver.find_element(By.CLASS_NAME, 'natal_button')
+    button.click()
+    driver.switch_to.window(driver.window_handles[1])
+    natal = requests.get(driver.current_url)
+    spaces = BeautifulSoup(natal.text, 'html.parser')
+    search_space = fromstring(str(spaces))
+    link = search_space.xpath('//a[contains(@class, "fancybox")]/@href')[0]
+    img = requests.get(link)
     if img.status_code == 200:
         with await open("natal.jpg", "wb") as file:
             await file.write(img.content)
