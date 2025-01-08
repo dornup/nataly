@@ -4,6 +4,7 @@ from typing import Dict, Any
 import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router, html
+from aiogram.types.input_file import FSInputFile
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -60,7 +61,7 @@ class Form(StatesGroup):
     state = State()
     cityplan =State()
 
-driver = WebDriver(service=ChromeService())
+# driver = WebDriver(service=ChromeService())
 # driver_path = ChromeDriverManager().install()
 # # с библиотекой какой-то косяк из-за новой версии chrome, поэтому пришлось вставить сюда этот костыль
 # if driver_path:
@@ -157,6 +158,7 @@ async def city(message: types.Message, state: FSMContext):
 
 
 async def send_data(message: types.Message, data: Dict[str, Any]):
+    driver = WebDriver(service=ChromeService())
     name = data['name']
     year = data['year']
     month = data['month']
@@ -203,8 +205,15 @@ async def send_data(message: types.Message, data: Dict[str, Any]):
         with open("natal.jpg", "wb") as file:
             file.write(img.content)
             print("Картинка успешно скачана")
+            photo = FSInputFile('natal.jpg')
+            await bot.send_photo(chat_id=message.chat.id, photo=photo)
     else:
         print("Не удалось скачать картинку")
+        await message.answer('Не удалось скачать картинку, попробуйте повторить позже(')
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])
+    driver.close()
+
 
 
 async def main():
